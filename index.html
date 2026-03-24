@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recipe Prompt Generator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --cream: #f9f4ec;
+      --ink: #1a1208;
+      --gold: #c9963a;
+      --gold-light: #e8c47a;
+      --rust: #b85c2a;
+      --sage: #6b7c5e;
+      --card-bg: #fffdf8;
+      --border: #e2d9c8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* Decorative top strip */
+    .top-strip {
+      height: 5px;
+      background: linear-gradient(90deg, var(--rust), var(--gold), var(--sage), var(--gold), var(--rust));
+    }
+
+    header {
+      padding: 3rem 1rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 2px;
+      background: var(--gold);
+      margin: 1.2rem auto 0;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    header p {
+      color: var(--sage);
+      font-size: 0.95rem;
+      margin-top: 0.6rem;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+      padding: 2.5rem;
+      max-width: 680px;
+      margin: 0 auto 2rem;
+    }
+
+    label {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--rust);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      padding: 0.75rem 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: #fff;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,150,58,0.12);
+      outline: none;
+      color: var(--ink);
+    }
+
+    /* Custom radio buttons */
+    .recipe-type-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .recipe-type-group input[type="radio"] { display: none; }
+
+    .recipe-type-group label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--ink);
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      padding: 0.65rem 1.4rem;
+      border-radius: 2px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--cream);
+    }
+
+    .recipe-type-group label:hover {
+      border-color: var(--gold);
+      color: var(--rust);
+    }
+
+    .recipe-type-group input[type="radio"]:checked + label {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--gold-light);
+    }
+
+    .generate-btn {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: var(--ink);
+      color: var(--gold-light);
+      border: none;
+      border-radius: 2px;
+      padding: 1rem 2.5rem;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 0.5rem;
+    }
+
+    .generate-btn:hover { background: var(--rust); }
+    .generate-btn:active { transform: scale(0.99); }
+
+    /* Output section */
+    .output-section { display: none; max-width: 680px; margin: 0 auto 3rem; }
+    .output-section.visible { display: block; }
+
+    .output-block {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      margin-bottom: 1.2rem;
+      overflow: hidden;
+    }
+
+    .output-block-header {
+      background: var(--ink);
+      color: var(--gold-light);
+      font-family: 'Playfair Display', serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.75rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--gold-light);
+      background: transparent;
+      border: 1px solid rgba(232,196,122,0.3);
+      border-radius: 2px;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .copy-btn:hover { background: rgba(232,196,122,0.15); border-color: var(--gold-light); }
+    .copy-btn.copied { color: #8bc98b; border-color: rgba(139,201,139,0.4); }
+
+    .output-body {
+      padding: 1.3rem 1.4rem;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--ink);
+      white-space: pre-wrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Image prompts grid */
+    .image-grid {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .image-prompt-item {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1rem 1.2rem;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      position: relative;
+    }
+
+    .image-prompt-item .item-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .image-prompt-item .item-copy {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.9rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--sage);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .image-prompt-item .item-copy:hover { color: var(--rust); border-color: var(--rust); }
+    .image-prompt-item .item-copy.copied { color: #6b9e6b; border-color: #6b9e6b; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--sage);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 576px) {
+      .main-card { padding: 1.5rem 1.2rem; }
+      .recipe-type-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-strip"></div>
+
+  <header>
+    <h1>Recipe Prompt Generator</h1>
+    <p>Craft AI prompts for blog posts &amp; images</p>
+  </header>
+
+  <div class="container px-3">
+    <div class="main-card">
+      <div class="mb-4">
+        <label for="recipeCount">Number of Recipes</label>
+        <input type="number" id="recipeCount" class="form-control" min="1" max="20" value="3" placeholder="e.g. 5"/>
+      </div>
+
+      <div class="mb-4">
+        <label for="language">Language</label>
+        <select id="language" class="form-select">
+          <option value="English">English</option>
+          <option value="Polish">Polish</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label>Recipe Type</label>
+        <div class="recipe-type-group">
+          <input type="radio" id="typeFood" name="recipeType" value="food"/>
+          <label for="typeFood">🍽️ Food Recipes</label>
+
+          <input type="radio" id="typeBeauty" name="recipeType" value="beauty" checked/>
+          <label for="typeBeauty">✨ Beauty Recipes</label>
+        </div>
+      </div>
+
+      <button class="generate-btn" onclick="generate()">Generate Prompts</button>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section" id="outputSection">
+      <hr class="divider"/>
+
+      <div class="output-block">
+        <div class="output-block-header">
+          <span>📝 Blog Post Prompt</span>
+          <button class="copy-btn" onclick="copyText('blogPromptText', this)">Copy</button>
+        </div>
+        <div class="output-body" id="blogPromptText"></div>
+      </div>
+
+      <div class="output-block">
+        <div class="output-block-header">
+          <span>🖼️ Image Prompts</span>
+        </div>
+        <div style="padding: 1.2rem;">
+          <div class="image-grid" id="imagePromptsGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Recipe Prompt Generator &mdash; for AI content creation</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function generate() {
+      const count = parseInt(document.getElementById('recipeCount').value);
+      const lang = document.getElementById('language').value;
+      const type = document.querySelector('input[name="recipeType"]:checked').value;
+
+      if (!count || count < 1) { alert('Please enter a valid number of recipes.'); return; }
+
+      const blogPrompt = buildBlogPrompt(count, lang, type);
+      const imagePrompts = buildImagePrompts(count, lang, type);
+
+      document.getElementById('blogPromptText').textContent = blogPrompt;
+
+      const grid = document.getElementById('imagePromptsGrid');
+      grid.innerHTML = '';
+      imagePrompts.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'image-prompt-item';
+        div.innerHTML = `
+          <div class="item-label">Image ${i + 1}</div>
+          <button class="item-copy" onclick="copyItemText(this)">Copy</button>
+          <div class="item-text">${escapeHtml(p)}</div>
+        `;
+        grid.appendChild(div);
+      });
+
+      const section = document.getElementById('outputSection');
+      section.classList.add('visible');
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function buildBlogPrompt(count, lang, type) {
+      const isBeauty = type === 'beauty';
+      const langNote = lang === 'Polish'
+        ? `Write the entire blog post in Polish. All recipe names, descriptions, ingredients, instructions, and headings must be in Polish.`
+        : `Write the entire blog post in English.`;
+
+      if (isBeauty) {
+        return `Write a numbered blog post featuring ${count} homemade beauty recipe${count > 1 ? 's' : ''}. ${langNote}
+
+Structure the post as follows:
+- An engaging introduction paragraph about the benefits of natural, homemade beauty products.
+- ${count} numbered recipes, each containing:
+  1. A compelling recipe title
+  2. A short description (2–3 sentences) of the skin/hair/body benefit
+  3. Ingredients list (with quantities)
+  4. Step-by-step instructions (numbered)
+  5. A "Before & After" tip: describe what visible change the reader can expect after using this recipe regularly (e.g., improved skin tone, reduced redness, softer hair).
+- A closing paragraph encouraging readers to try the recipes and share their results.
+
+Tone: warm, encouraging, and informative. Suitable for a lifestyle or wellness blog.`;
+      } else {
+        return `Write a numbered blog post featuring ${count} original food recipe${count > 1 ? 's' : ''}. ${langNote}
+
+Structure the post as follows:
+- An engaging introduction paragraph about the theme or season of the recipes (e.g., comfort food, quick weeknight dinners, healthy meals, etc.).
+- ${count} numbered recipes, each containing:
+  1. A creative recipe title
+  2. A short description (2–3 sentences) about the dish and its flavors
+  3. Ingredients list (with quantities and servings)
+  4. Step-by-step cooking instructions (numbered)
+  5. A serving suggestion or plating tip
+- A closing paragraph inviting readers to try the recipes and leave comments.
+
+Tone: friendly, appetizing, and conversational. Suitable for a food blog.`;
+      }
+    }
+
+    function buildImagePrompts(count, lang, type) {
+      const isBeauty = type === 'beauty';
+      const langTag = lang === 'Polish' ? ', with any visible text or labels in Polish' : ', with any visible text or labels in English';
+      const prompts = [];
+
+      for (let i = 1; i <= count; i++) {
+        if (isBeauty) {
+          // Main product image
+          prompts.push(
+            `Flat lay product photography of homemade beauty recipe #${i}: a small glass jar or bowl containing a natural cosmetic preparation (cream, scrub, mask, or serum), surrounded by its raw ingredients (herbs, fruits, oils, flowers) on a clean marble or linen surface. Soft natural light, pastel tones, minimalist styling. High resolution, editorial quality${langTag}.`
+          );
+          // Before & After image
+          prompts.push(
+            `Split-panel "before and after" beauty photo for recipe #${i}. Left panel: close-up of skin or hair showing the issue the recipe addresses (dryness, uneven tone, frizz, etc.), natural lighting, realistic. Right panel: same area after using the homemade remedy, visibly improved — smoother, glowing, or healthier. Clean white dividing line between panels. Label the panels "Before" and "After"${langTag}. Photorealistic, beauty editorial style.`
+          );
+        } else {
+          prompts.push(
+            `Professional food photography of recipe #${i}. The dish is beautifully plated on a rustic ceramic plate or wooden board, garnished with fresh herbs or complementary ingredients. Warm, natural side lighting, shallow depth of field, bokeh background. Rich colors, appetizing composition. High-resolution editorial food blog style${langTag}.`
+          );
+        }
+      }
+
+      return prompts;
+    }
+
+    function copyText(id, btn) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    function copyItemText(btn) {
+      const text = btn.closest('.image-prompt-item').querySelector('.item-text').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>
